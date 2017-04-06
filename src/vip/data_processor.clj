@@ -41,8 +41,8 @@
   v5-1-validations/validations)
 
 (defn add-validations
-  [{:keys [spec-version skip-validations?] :as ctx}]
-  (if skip-validations?
+  [{:keys [spec-version opts] :as ctx}]
+  (if (:skip-validations? opts)
     (do
       (log/info "Skipping validations")
       ctx)

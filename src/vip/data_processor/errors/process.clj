@@ -4,8 +4,11 @@
             [vip.data-processor.db.statistics :as stats]
             [vip.data-processor.db.tree-statistics :as tree-stats]))
 
-(defn process-v3-validations [{:keys [errors-chan] :as ctx}]
-  (let [processing-chan (util-async/batch-process
+(defn process-v3-validations [{:keys [errors-chan opts] :as ctx}]
+  (let [wrapup-fn (if (true? (:skip-validations opts))
+                    (constantly nil)
+                    (partial stats/store-stats ctx))
+        processing-chan (util-async/batch-process
                          errors-chan
                          (fn [errors]
                            (psql/bulk-import
@@ -15,11 +18,14 @@
                          {:batch-size 10000
                           :timeout 5000
                           :pool-size 30
-                          :wrapup-f (partial stats/store-stats ctx)})]
+                          :wrapup-f wrapup-fn})]
     (assoc ctx :processing-chan processing-chan)))
 
-(defn process-v5-validations [{:keys [errors-chan] :as ctx}]
-  (let [processing-chan (util-async/batch-process
+(defn process-v5-validations [{:keys [errors-chan opts] :as ctx}]
+  (let [wrapup-fn (if (true? (:skip-validations? opts))
+                    (constantly nil)
+                    (partial tree-stats/store-tree-stats ctx))
+        processing-chan (util-async/batch-process
                          errors-chan
                          (fn [errors]
                            (psql/bulk-import
@@ -29,5 +35,5 @@
                          {:batch-size 10000
                           :timeout 5000
                           :pool-size 30
-                          :wrapup-f (partial tree-stats/store-tree-stats ctx)})]
+                          :wrapup-f wrapup-fn})]
     (assoc ctx :processing-chan processing-chan)))

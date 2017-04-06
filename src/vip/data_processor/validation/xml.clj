@@ -1,5 +1,6 @@
 (ns vip.data-processor.validation.xml
   (:require [clojure.data.xml :as xml]
+            [clojure.tools.logging :as log]
             [clojure.walk :refer [stringify-keys]]
             [com.climate.newrelic.trace :refer [defn-traced]]
             [korma.core :as korma]
@@ -216,6 +217,7 @@
   [ctx]
   (let [xml-file (first (:input ctx))
         import-id (:import-id ctx)]
+    (log/info "Starting to load" (str xml-file))
     (with-open [reader (util/bom-safe-reader xml-file)]
       (doseq [pvs (->> reader
                        xml/parse

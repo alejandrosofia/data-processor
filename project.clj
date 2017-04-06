@@ -28,6 +28,7 @@
                  [org.postgresql/postgresql "42.0.0" :exclusions [org.slf4j/slf4j-simple
                                                                   org.slf4j/slf4j-api]]
                  [org.xerial/sqlite-jdbc "3.8.11.2"]]
+  :aliases {"load" ["run" "-m" "dev.load"]}
   :plugins [[com.pupeno/jar-copier "0.4.0"]]
   :profiles {:test {:resource-paths ["test-resources"]
                     :dependencies [[com.github.kyleburton/clj-xpath "1.4.5"]]}

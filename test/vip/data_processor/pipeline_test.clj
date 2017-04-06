@@ -46,4 +46,19 @@
           pipeline [incrementor incrementor incrementor]
           result (process pipeline intial-input)]
       (is (= 3 (:input result)))
-      (is (empty? (:pipeline result))))))
+      (is (empty? (:pipeline result)))))
+
+  (testing "When no options are given, the context contains defaults"
+    (let [intial-input 0
+          pipeline [incrementor incrementor incrementor]
+          result (process pipeline intial-input)]
+      (is (false? (get-in result [:opts :skip-validations?])))))
+
+  (testing "Providing options merges them with defaults"
+    (let [intial-input 0
+          pipeline [incrementor incrementor incrementor]
+          result (process pipeline intial-input {:skip-validations? true
+                                                 :go-fast false})]
+      (are [x y] (= x (get-in result [:opts y]))
+        false :go-fast
+        true  :skip-validations?))))

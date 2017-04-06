@@ -32,30 +32,40 @@
             (recur next-ctx)))
         ctx))))
 
+(def default-opts
+  {:skip-validations? false
+   :skip-summary? false})
+
 (defn process
   "A pipeline is a sequence of functions that take and return a
   `processing context`. The `initial-input` will be placed as the
   `:input` on the processing context for the first function in the
   pipeline.
 
+  When called without `opts`, sensible defaults are used; When called
+  with `opts`, they are merged into the defaults.
+
   Runs the pipeline, returning the final context. An exception on the
   context will result in logging the exception."
-  [pipeline initial-input]
-  (let [ctx {:input initial-input
-             :skip-validations? false
-             :spec-version (atom nil)
-             :errors-chan (a/chan 1024)
-             :pipeline pipeline}
-        result (run-pipeline ctx)
-        import-id (:import-id result)]
-    (log/info (pr-str (select-keys result [:import-id :public-id :db :xml-output-file])))
+  ([pipeline initial-input]
+   (process pipeline initial-input {}))
 
-    (when-let [stop (:stop result)]
-      (psql/fail-run import-id nil)
-      (log/error "Stopping run of" import-id "due to:" stop))
+  ([pipeline initial-input opts]
+   (let [ctx {:input initial-input
+              :opts (merge default-opts opts)
+              :spec-version (atom nil)
+              :errors-chan (a/chan 1024)
+              :pipeline pipeline}
+         result (run-pipeline ctx)
+         import-id (:import-id result)]
+     (log/info (pr-str (select-keys result [:import-id :public-id :db :xml-output-file])))
 
-    (when-let [ex (:exception result)]
-      (psql/fail-run import-id (with-out-str (stacktrace/print-throwable ex)))
-      (log/error (with-out-str (stacktrace/print-stack-trace ex))))
+     (when-let [stop (:stop result)]
+       (psql/fail-run import-id nil)
+       (log/error "Stopping run of" import-id "due to:" stop))
 
-    result))
+     (when-let [ex (:exception result)]
+       (psql/fail-run import-id (with-out-str (stacktrace/print-throwable ex)))
+       (log/error (with-out-str (stacktrace/print-stack-trace ex))))
+
+     result)))

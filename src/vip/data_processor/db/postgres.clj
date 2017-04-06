@@ -271,6 +271,7 @@
 (defn populate-locality-table
   [ctx]
   (let [id (:import-id ctx)]
+    (log/info "Populating locality table")
     (korma/exec-raw
      (:conn xml-tree-values)
      ["select v5_dashboard.populate_locality_table(?)" [id]]))
@@ -300,10 +301,10 @@
    ["select v5_dashboard.populate_elections_table(?)" [import-id]])
   ctx)
 
-
 (defn v5-summary-branch
-  [{:keys [spec-version] :as ctx}]
-  (if (= @spec-version "5.1")
+  [{:keys [spec-version opts] :as ctx}]
+  (if (and (= @spec-version "5.1")
+           (false? (:skip-summary? opts)))
     (update ctx :pipeline (partial concat [populate-locality-table
                                            populate-i18n-table
                                            populate-sources-table
@@ -313,6 +314,7 @@
 (defn complete-run [ctx]
   (let [id (:import-id ctx)
         filename (:generated-xml-filename ctx)]
+    (log/info "Completing run" id)
     (korma/update results
                   (korma/set-fields {:filename filename
                                      :complete true
