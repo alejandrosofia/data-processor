@@ -11,10 +11,12 @@
        postgres/column-names
        (filter #(str/ends-with? % "_count"))
        (map #(str/replace % #"_count" ""))
-       (map t-util/column->xml-elment)))
+       (map t-util/column->xml-elment)
+       (remove #(str/starts-with? % "BallotMeasureContest"))))
 
 (defn error-query []
   (let [element-paths (str/join "|" (reported-elements))]
+    (log/info (pr-str element-paths))
     (str
      "WITH errors AS (SELECT element_type(errors.path) AS element_type,
                          COUNT(errors.severity) AS error_count
