@@ -24,13 +24,22 @@ from xml_tree_values
   where results_id = rid
   and path ~ 'VipObject.0.BallotMeasureContest.*';
 
-raise notice 'bmc_errors = %', bmc_errors;
-raise notice 'bmc_count = %', bmc_count;
+
+select
+  case
+    when bmc_count < bmc_errors
+      then 0
+    when bmc_errors = 0
+      then 100
+    else (bmc_count - bmc_errors)/bmc_count
+  into bmc_completion
+end;
 
 update v5_statistics
   set
     ballot_measure_contest_errors = bmc_errors,
-    ballot_measure_contest_count = bmc_count
+    ballot_measure_contest_count = bmc_count,
+    ballot_measure_contest_completion = bmc_completion
   where results_id = rid;
 
 end;
