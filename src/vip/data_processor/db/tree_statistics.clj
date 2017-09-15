@@ -11,12 +11,10 @@
        postgres/column-names
        (filter #(str/ends-with? % "_count"))
        (map #(str/replace % #"_count" ""))
-       (map t-util/column->xml-elment)
-       (remove #(str/starts-with? % "BallotMeasureContest"))))
+       (map t-util/column->xml-elment)))
 
 (defn error-query []
   (let [element-paths (str/join "|" (reported-elements))]
-    (log/info (pr-str element-paths))
     (str
      "WITH errors AS (SELECT element_type(errors.path) AS element_type,
                          COUNT(errors.severity) AS error_count
@@ -75,9 +73,9 @@
   (korma/insert postgres/v5-statistics
     (korma/values
      (assoc (stats ctx) :results_id import-id)))
-  (log/info "Getting ballot measure contest stats")
-  (korma/exec-raw
-   ["select * from v5_dashboard.ballot_measure_contest_summary(?)" [import-id]])
+  ; (log/info "Getting ballot measure contest stats")
+  ; (korma/exec-raw
+  ;  ["select * from v5_dashboard.ballot_measure_contest_summary(?)" [import-id]])
   (log/info "Building locality stats")
   (korma/exec-raw
    ["select * from v5_dashboard.feed_localities(?)" [import-id]])
