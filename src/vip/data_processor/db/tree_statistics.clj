@@ -75,6 +75,9 @@
   (korma/insert postgres/v5-statistics
     (korma/values
      (assoc (stats ctx) :results_id import-id)))
+  (log/info "Getting ballot measure contest stats")
+  (korma/exec-raw
+   ["select * from v5_dashboard.ballot_measure_contest_summary(?)" [import-id]])
   (log/info "Building locality stats")
   (korma/exec-raw
    ["select * from v5_dashboard.feed_localities(?)" [import-id]])
