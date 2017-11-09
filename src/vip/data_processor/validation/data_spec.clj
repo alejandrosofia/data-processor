@@ -3,7 +3,10 @@
             [clojure.tools.logging :as log]
             [vip.data-processor.validation.data-spec.v3-0 :as v3-0]
             [vip.data-processor.validation.data-spec.v5-1 :as v5-1]
-            [vip.data-processor.errors :as errors]))
+            [vip.data-processor.errors :as errors])
+  (:import [java.nio.charset CharsetDecoder Charset
+            CodingErrorAction]
+           [java.nio ByteBuffer CharBuffer]))
 
 (def version-specs
   {"3.0" v3-0/data-specs
@@ -14,7 +17,18 @@
     (assoc ctx :data-specs data-specs)))
 
 (defn invalid-utf-8? [string]
-  (.contains string "�"))
+  (let [decoder (-> (Charset/forName "UTF-8")
+                    (.newDecoder)
+                    (.onMalformedInput CodingErrorAction/REPORT)
+                    (.onUnmappableCharacter CodingErrorAction/REPORT))
+        bytes (.getBytes string)
+        input-buffer (-> (.length bytes)
+                         (ByteBuffer/allocate)
+                         (.put bytes))
+        output-buffer (-> (.length bytes)
+                          (CharBuffer/allocate))
+        results (.decode decoder input-buffer output-buffer true)]
+    (.isError results)))
 
 (defn create-format-rule
   "Create a function that applies a format check for a specific
